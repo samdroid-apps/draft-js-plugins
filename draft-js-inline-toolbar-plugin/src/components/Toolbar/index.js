@@ -1,4 +1,5 @@
 import React from 'react';
+import { findDOMNode } from 'react-dom';
 import { getVisibleSelectionRect } from 'draft-js';
 
 // TODO make toolbarHeight to be determined or a parameter
@@ -17,10 +18,26 @@ const getRelativeParent = (element) => {
   return getRelativeParent(element.parentElement);
 };
 
+const DefaultToolbarComponent = ({ position, theme, children }) => {
+  const style = position.open ?
+      { top: position.top,
+        left: position.left,
+        transform: 'translate(-50%) scale(1)',
+        transition: 'transform 0.15s cubic-bezier(.3,1.2,.2,1)',
+      } : {
+        transform: 'translate(-50%) scale(0)'
+      };
+    return <div className={theme.toolbarStyles.toolbar}
+                style={style}>
+      {children}
+    </div>;
+};
+
 export default class Toolbar extends React.Component {
 
   state = {
     isVisible: false,
+    position: { open: false },
   }
 
   componentWillMount() {
@@ -37,39 +54,42 @@ export default class Toolbar extends React.Component {
     setTimeout(() => {
       let position;
       if (isVisible) {
-        const relativeParent = getRelativeParent(this.toolbar.parentElement);
+        const toolbar = findDOMNode(this.toolbar);
+        const relativeParent = getRelativeParent(toolbar.parentElement);
         const relativeRect = relativeParent ? relativeParent.getBoundingClientRect() : document.body.getBoundingClientRect();
         const selectionRect = getVisibleSelectionRect(window);
         position = {
           top: (selectionRect.top - relativeRect.top) - toolbarHeight,
           left: (selectionRect.left - relativeRect.left) + (selectionRect.width / 2),
-          transform: 'translate(-50%) scale(1)',
-          transition: 'transform 0.15s cubic-bezier(.3,1.2,.2,1)',
+          open: true,
         };
       } else {
-        position = { transform: 'translate(-50%) scale(0)' };
+        position = { open: false };
       }
       this.setState({ position });
     }, 0);
   }
 
   render() {
-    const { theme, store } = this.props;
-    return (
-      <div
-        className={theme.toolbarStyles.toolbar}
-        style={this.state.position}
-        ref={(toolbar) => { this.toolbar = toolbar; }}
-      >
-        {this.props.structure.map((Component, index) => (
-          <Component
-            key={index}
-            theme={theme.buttonStyles}
-            getEditorState={store.getItem('getEditorState')}
-            setEditorState={store.getItem('setEditorState')}
-          />
-        ))}
-      </div>
+    const {
+      theme,
+      store,
+      toolbarComponent = <DefaultToolbarComponent /> } = this.props;
+    return React.cloneElement(
+      toolbarComponent,
+      {
+        ref: (toolbar) => { this.toolbar = toolbar; },
+        position: this.state.position,
+        theme,
+      },
+      this.props.structure.map((Component, index) => (
+        <Component
+          key={index}
+          theme={theme.buttonStyles}
+          getEditorState={store.getItem('getEditorState')}
+          setEditorState={store.getItem('setEditorState')}
+        />
+      ))
     );
   }
 }
