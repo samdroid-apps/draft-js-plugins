@@ -2,8 +2,7 @@ import React from 'react';
 import { findDOMNode } from 'react-dom';
 import { getVisibleSelectionRect } from 'draft-js';
 
-// TODO make toolbarHeight to be determined or a parameter
-const toolbarHeight = 44;
+const DEFAULT_TOOLBAR_HEIGHT = 44;
 
 const getRelativeParent = (element) => {
   if (!element) {
@@ -51,6 +50,7 @@ export default class Toolbar extends React.Component {
   onVisibilityChanged = (isVisible) => {
     // need to wait a tick for window.getSelection() to be accurate
     // when focusing editor with already present selection
+    const { toolbarHeight = DEFAULT_TOOLBAR_HEIGHT } = this.props;
     setTimeout(() => {
       let position;
       if (isVisible) {
