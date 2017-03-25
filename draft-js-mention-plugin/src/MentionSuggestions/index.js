@@ -296,9 +296,7 @@ export default class MentionSuggestions extends Component {
   };
 
   render() {
-    if (!this.state.isActive) {
-      return null;
-    }
+    const { isActive } = this.state;
 
     const {
       entryComponent,
@@ -322,25 +320,28 @@ export default class MentionSuggestions extends Component {
       popoverComponent,
       {
         ...elementProps,
+        isActive,
         className: theme.mentionSuggestions,
         role: 'listbox',
         id: `mentions-list-${this.key}`,
         ref: (element) => { this.popover = element; },
       },
-      this.props.suggestions.map((mention, index) => (
-        <Entry
-          key={mention.has('id') ? mention.get('id') : mention.get('name')}
-          onMentionSelect={this.onMentionSelect}
-          onMentionFocus={this.onMentionFocus}
-          isFocused={this.state.focusedOptionIndex === index}
-          mention={mention}
-          index={index}
-          id={`mention-option-${this.key}-${index}`}
-          theme={theme}
-          searchValue={this.lastSearchValue}
-          entryComponent={entryComponent || defaultEntryComponent}
-        />
-      )).toJS()
+      isActive ?
+        this.props.suggestions.map((mention, index) => (
+          <Entry
+            key={mention.has('id') ? mention.get('id') : mention.get('name')}
+            onMentionSelect={this.onMentionSelect}
+            onMentionFocus={this.onMentionFocus}
+            isFocused={this.state.focusedOptionIndex === index}
+            mention={mention}
+            index={index}
+            id={`mention-option-${this.key}-${index}`}
+            theme={theme}
+            searchValue={this.lastSearchValue}
+            entryComponent={entryComponent || defaultEntryComponent}
+          />
+        )).toJS()
+        : undefined
     );
   }
 }
